@@ -15,18 +15,15 @@ const serial = new SerialPort('/dev/ttyUSB0', {
 });
 
 class saberToothPacketSerial {
-	constructor (address, mask){
+	constructor (address){
 		this.address = address;
-		this.mask = mask;
+		this.mask = 127;
 	}
 	update (command, data) {
 		this.command = command;
 		this.data = data;
-		//console.log(this.address, this.command, this.data);
 		let checksum = ((this.address + this.command + this.data) & this.mask);
-		//console.log('Checksum ', checksum);
 		let newUpdate = Buffer.from([this.address, this.command, this.data, checksum]);
-		//console.log('New update', newUpdate);
 		serial.write(newUpdate);
 	}
 	stop () {
@@ -35,7 +32,7 @@ class saberToothPacketSerial {
 	}
 }
 
- const child = execFile('/usr/local/bin/mjpg_streamer', ['-i', 'input_uvc.so', '-o', 'output_http.so -p 8090 -w ./home/pi/raspiRover/webcam/'], (error, stdout, stderr) => {
+const child = execFile('/usr/local/bin/mjpg_streamer', ['-i', 'input_uvc.so', '-o', 'output_http.so -p 8090 -w ./home/pi/raspiRover/webcam/'], (error, stdout, stderr) => {
 	if (error) {
 		console.log(error);
 		return;
@@ -64,7 +61,7 @@ const server = http.createServer((req, res) => {
 const wss = new websocket.Server({server});
 
 wss.on('connection', function open(ws) {
-	let saber = new saberToothPacketSerial(128, 127);
+	let saber = new saberToothPacketSerial(128);
 	//console.log('connection established');
 	ws.send('connected');
 	ws.on('message', function incoming(message) {

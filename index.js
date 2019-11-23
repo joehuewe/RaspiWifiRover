@@ -5,12 +5,16 @@ const fs = require('fs');
 const port = 80;
 const websocket = require('ws');
 const url = require('url');
+//const Gpio = require('pigpio').Gpio;
 const SerialPort = require('serialport');
+
+//const levelShiftEnable = new Gpio(4, {mode: Gpio.OUTPUT});
+//levelShiftEnable.digitalWrite(0);
 var rover = {
 	y: 64,
 	x: 64,
 };
-const serial = new SerialPort('/dev/ttyUSB0', {
+const serial = new SerialPort('/dev/serial0', {
 	baudRate: 9600,
 });
 
@@ -26,9 +30,10 @@ class saberToothPacketSerial {
 		let newUpdate = Buffer.from([this.address, this.command, this.data, checksum]);
 		serial.write(newUpdate);
 	}
-	stop () {
-		update (12, 64);
-		update (13, 64);
+	setMinVolt (data) {
+		this.command = 2;
+		this.data = (data - 6) * 5;
+		console.log(this.data);
 	}
 }
 
@@ -62,6 +67,7 @@ const wss = new websocket.Server({server});
 
 wss.on('connection', function open(ws) {
 	let saber = new saberToothPacketSerial(128);
+	saber.setMinVolt(9.2);
 	//console.log('connection established');
 	ws.send('connected');
 	ws.on('message', function incoming(message) {

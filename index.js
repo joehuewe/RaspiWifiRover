@@ -5,11 +5,8 @@ var fs = require('fs');
 var port = 80;
 var websocket = require('ws');
 var url = require('url');
-//const Gpio = require('pigpio').Gpio;
 var SerialPort = require('serialport');
 
-//const levelShiftEnable = new Gpio(4, {mode: Gpio.OUTPUT});
-//levelShiftEnable.digitalWrite(0);
 var rover = {
 	propel: {
 		y: 64,
@@ -43,14 +40,6 @@ class saberToothPacketSerial {
 	}
 }
 
-/*const child = execFile('/usr/local/bin/mjpg_streamer', ['-i', 'input_uvc.so', '-o', 'output_http.so -p 8090 -w /home/pi/RaspiWifiRover/Public/'], (error, stdout, stderr) => {
-	if (error) {
-		console.log(error);
-		return;
-	}
-	console.log(stdout);
-});*/
-
 var server = http.createServer((req, res) => {
 	var q = url.parse(req.url, true);
 	var filename;
@@ -68,7 +57,6 @@ var server = http.createServer((req, res) => {
     	res.end();
 	});
 });
-//var saber;
 var wss = new websocket.Server({server});
 
 wss.on('connection', function open(ws) {
@@ -89,24 +77,10 @@ wss.on('connection', function open(ws) {
 
 	});
 });
-/*wsServer.on('request', function(request) {
-    const connection = request.accept(null, request.origin);
-    connection.on('message', function(message) {
-      console.log('Received Message:', message.utf8Data);
-      connection.sendUTF('Hi this is WebSocket server!');
-    });
-    connection.on('close', function(reasonCode, description) {
-        console.log('Client has disconnected.');
-    });
-});
-	this.send('Acknowledged command: ' + JSON.stringify(rover));
-	saber.update(12, rover.propel.y);
-	saber.update(13, rover.propel.x);
-});*/
+
 
 
 server.listen(port);
-//console.log(`http://${os.hostname()}.local`);
 process.on("SIGINT", () => {
       server.close();
       process.exit();

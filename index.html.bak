@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="mobile-web-app-capable" content="yes">
+        <title>RaspberryPi Rover</title>
+	<link rel="shortcut icon" href="favicon.ico"/>
+        <script src="./nipplejs.min.js"></script>
+        <style type = "text/css">
+        html, body {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 0;
+            margin: 0;
+        }
+        body {
+        	overflow: auto;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+        }
+
+        #video-stream {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            z-index: 4;
+        }
+
+        #video-stream img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            min-width: 50%;
+            min-height: 50%;
+            z-index: 0;
+       }
+
+       .container {
+            text-align: center;
+       }
+
+        #left {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 25%;
+            width: 25%;
+            z-index:10;
+        }
+        #right {
+            position: absolute;
+            right: 25px;
+            bottom: 25px;
+            height: 100px;
+            width: 100px;
+            z-index:10;
+        }
+	.button {
+		background-color: #B0C4DE;
+		border: 2px solid black;
+		border-radius: 12px;
+  		color: black;
+  		padding: 10px;
+  		text-align: center;
+  		text-decoration: none;
+  		display: inline-block;
+  		font-size: 16px;
+  		margin: 4px 4px;
+  		cursor: pointer;
+		position: absolute;
+		top: 0;
+		right: 0;
+		z-index:10;
+	}
+        </style>
+    </head>
+    <body>
+	<button class="button" onclick="openFullscreen();">Open Fullscreen</button>
+    	<div class="container" id="video-stream">
+    		<img src= "http://raspberrypi.local:8090/?action=stream" id='stream'>
+    	</div>
+      <div id="left"></div>
+      <div id="right"></div>
+      <script>
+        document.getElementById('stream').src = 'http://' + window.location.hostname + ':8090/?action=stream';
+	var elem = document.documentElement;
+	function openFullscreen() {
+  		if (elem.requestFullscreen) {
+  			elem.requestFullscreen();
+  		} else if (elem.mozRequestFullScreen) { /* Firefox */
+  			elem.mozRequestFullScreen();
+  		} else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+  			elem.webkitRequestFullscreen();
+  		} else if (elem.msRequestFullscreen) { /* IE/Edge */
+  			elem.msRequestFullscreen();
+  		}
+	}
+
+        let stickCenter = {
+          	x: 0,
+          	y: 0,
+
+        };
+        let rover = {
+          	x: 0,
+          	y: 0,
+        };
+        let lastCommand = {
+        	x:0,
+        	y:0,
+        };
+        let canTransmit = false;
+        //let cf = false;
+        let ws = new WebSocket('ws://' + window.location.hostname + ':80');
+
+        ws.onopen = function () {
+        	ws.send('connection');
+
+          	let joystick1 = nipplejs.create({
+              		zone: document.getElementById('right'),
+              		mode: 'static',
+              		position: { right: '50%', bottom: '50%' },
+              		color: '#B0C4DE',
+              		size: 100,
+              		restOpacity: 1,
+        	});
+        	joystick1.on('start', function (evt, nipple) {
+              		stickCenter.x = nipple.position.x;
+              		stickCenter.y = nipple.position.y;
+        	}).on('move', function (evt, nipple) {
+        		canTransmit = true;
+            		rover.x = ~~((nipple.position.x - stickCenter.x) * -1.26 + 63);
+            		rover.y = ~~((nipple.position.y - stickCenter.y) * -1.26 + 63);
+        	}).on('end', function (evt, nipple) {
+            	stop();
+        	});
+
+        	function stop() {
+        		rover.x = 64;
+        		rover.y = 64;
+        		ws.send(JSON.stringify(rover));
+        		canTransmit = false;
+        	}
+        };
+        ws.onmessage = function (message) {
+        	console.log(message);
+        };
+        setInterval(function() {
+        	if(canTransmit === true && (lastCommand.x != rover.x || lastCommand.y != rover.y)) {
+        		ws.send(JSON.stringify(rover));
+        		lastCommand.x = rover.x;
+        		lastCommand.y = rover.y;
+        	}
+        },100);
+      </script>
+    </body>
+</html>

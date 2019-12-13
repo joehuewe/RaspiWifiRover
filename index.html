@@ -2,168 +2,546 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-        <meta name="mobile-web-app-capable" content="yes">
-        <title>RaspberryPi Rover</title>
-	<link rel="shortcut icon" href="favicon.ico"/>
-        <script src="./nipplejs.min.js"></script>
-        <style type = "text/css">
-        html, body {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            padding: 0;
-            margin: 0;
-        }
-        body {
-        	overflow: auto;
-        }
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+        <title>Raspberry Pi Rover </title>
+        <style>
+            * {
+                box-sizing: border-box;
+                padding: 0;
+                margin: 0;
+            }
 
-        canvas {
-            display: block;
-            position: absolute;
-        }
+            body {
+                -webkit-appearance: none;
+                margin: 0px;
+            }
 
-        #video-stream {
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            z-index: 4;
-        }
+            .port {
+                width: 100vw;
+                height: 100vh;
+                background-image: url('http://192.168.1.6:8080/stream/video.mjpeg');
+                background-size: 100% 100%;
+            }
 
-        #video-stream img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            margin: auto;
-            min-width: 50%;
-            min-height: 50%;
-            z-index: 0;
-       }
+            .interface {
+                display: grid;
+                color: white;
+                text-align: center;
+                height: 100vh;
+                width: 100vw;
+                grid-template-columns: 50px 50px 50px 1fr 50px 50px 50px;
+                grid-template-rows: 50px 50px 50px 50px 1fr 50px 50px 50px;
+            }
 
-       .container {
-            text-align: center;
-       }
+            /*div {
+                        border: 1px solid black;
+            }*/
+            .info1 {
+                grid-column: 1/3;
+                grid-row: 1/2;
+            }
 
-        #left {
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            height: 25%;
-            width: 25%;
-            z-index:10;
-        }
-        #right {
-            position: absolute;
-            right: 25px;
-            bottom: 25px;
-            height: 100px;
-            width: 100px;
-            z-index:10;
-        }
-	.button {
-		background-color: #B0C4DE;
-		border: 2px solid black;
-		border-radius: 12px;
-  		color: black;
-  		padding: 10px;
-  		text-align: center;
-  		text-decoration: none;
-  		display: inline-block;
-  		font-size: 16px;
-  		margin: 4px 4px;
-  		cursor: pointer;
-		position: absolute;
-		top: 0;
-		right: 0;
-		z-index:10;
-	}
+            .info2 {
+                display: flex;
+                grid-column: 3/7;
+                grid-row: 1/2;
+            }
+
+            .info2>div {
+                background-color: rgba(255,255,255, .3);
+                color: black;
+                /*border: 1px solid black;*/
+                height: 50px;
+                cursor: pointer;
+                margin-right: 2px;
+                font-size: 2.5em;
+                padding-top: 0px;
+                padding-left: 4px;
+                padding-right: 4px;
+                padding-bottom: 0px;
+            }
+
+            .propelContainer {
+                display: none;
+                border-radius: 3px;
+                width: 100%;
+                overflow: hidden;
+                background-color: rgba(255,255,255, .3);
+            }
+
+            .pRange {
+                display: flex;
+                width: 100%;
+            }
+
+            .pLabel {
+                color: black;
+                font-size: 1.5em;
+                padding-right: 4px;
+                padding-left: 4px;
+            }
+
+            .pSlider {
+                -webkit-appearance: none;
+                outline: none;
+                flex: 3;
+                border-radius: 3px;
+                margin-left: 4px;
+                margin-bottom: 4px;
+                border: 1px solid black;
+                background-color: rgba(255,255,255, .3);
+            }
+
+            .pSlider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 25px;
+                height: 25px;
+                border: 1px solid black;
+                border-radius: 3px;
+                background-color: rgba(255,255,255, .7);
+            }
+
+            .pSlider::-moz-range-thumb {
+                width: 25px;
+                height: 25px;
+                border: 1px solid black;
+                border-radius: 3px;
+                background-color; rgba(255,255,255, .7); }
+
+            .pValue {
+                color: black;
+                font-size: 1.5em;
+                /*padding-top: 2px;*/
+                /*padding-right: 4px;*/
+                text-align: left;
+                margin-right: 4px;
+                flex: .5;
+                border: none;
+                min-width: 55px;
+            }
+
+            .info3 {
+                display: flex;
+                flex-direction: row-reverse;
+                grid-column: 7/8;
+                grid-row: 1/2;
+            }
+
+            .toggleFullScreen {
+                color: black;
+                font-size: 2.5em;
+                background-color: rgba(255,255,255, .3);
+                margin-right: 2px;
+                margin-top: 2px;
+                align-self: center;
+                height: 50px;
+                width: 50px;
+            }
+
+            .triangle-up {
+                width: 0;
+                height: 0;
+                border-left: 25px solid transparent;
+                border-right: 25px solid transparent;
+                border-bottom: 50px solid #555;
+            }
+
+            .info4 {
+                grid-column: 1/3;
+                grid-row: 2/5;
+            }
+
+            .main {
+                grid-column: 3/6;
+                grid-row: 2/6;
+            }
+
+            .eventContainer {
+            }
+
+            .eventData {
+            }
+
+            .tracks {
+                grid-column: 6/8;
+                grid-row: 2/5;
+            }
+
+            .pad1 {
+                display: flex;
+                flex-direction: column;
+                grid-column: 1/3;
+                grid-row: 5/6;
+            }
+
+            .cAxis {
+                display: none;
+                background-color: rgba(255,255,255, .3);
+                color: black;
+                font-size: 1.1em;
+                border-radius: 3px;
+                padding: 2px;
+            }
+
+            .pad2 {
+                display: flex;
+                flex-direction: column;
+                grid-column: 6/8;
+                grid-row: 5/6;
+            }
+
+            .pAxis {
+                display: none;
+                background-color: rgba(255,255,255, .3);
+                color: black;
+                font-size: 1.1em;
+                border-radius: 3px;
+                padding: 2px;
+            }
+
+            .pad3 {
+                grid-column: 1/2;
+                grid-row: 6/8;
+            }
+
+            .lStickContainer {
+                grid-column: 2/4;
+                grid-row: 6/8;
+            }
+
+            .lStick {
+                border: 0px;
+                position: absolute;
+                display: block;
+            }
+
+            .lBack {
+                position: absolute;
+                display: block;
+                width: 100px;
+                height: 100px;
+                background-color: rgba(255,255,255, .3);
+                /*border-radius: 3px;*/
+            }
+
+            .lFront {
+                position: absolute;
+                display: block;
+                color: black;
+                line-height: 50px;
+                width: 50px;
+                height: 50px;
+                margin-left: 25px;
+                margin-top: 25px;
+                background-color: rgba(255,255,255, .5);
+                /*border-radius: 10px;*/
+                left: 0px;
+                top: 0px;
+            }
+
+            .statusLower {
+                grid-column: 4/5;
+                grid-row: 6/9;
+            }
+            .rStickContainer {
+                border: 0px;
+                paddding: 0px;
+                grid-column: 5/7;
+                grid-row: 6/8;
+            }
+
+            .rStick {
+                border: 0px;
+                position: absolute;
+                display: block;
+            }
+
+            .rBack {
+                position: absolute;
+                display: block;
+                width: 100px;
+                height: 100px;
+                background-color: rgba(255,255,255, .3);
+                /*border-radius: 50%;*/
+            }
+
+            .rFront {
+                position: absolute;
+                display: block;
+                color: black;
+                line-height: 50px;
+                width: 50px;
+                height: 50px;
+                margin-left: 25px;
+                margin-top: 25px;
+                background-color: rgba(255,255,255, .5);
+                /*border-radius: 50%;*/
+                left: 0px;
+                top: 0px;
+            }
+
+            .pad4 {
+                grid-column: 7/8;
+                grid-row: 6/8;
+            }
+
+            .footer1 {
+                grid-column: 1/4;
+                grid-row: 8/9;
+            }
+
+            .footer2 {
+                grid-column: 5/8;
+                grid-row: 8/9;
+            }
         </style>
     </head>
     <body>
-	<button class="button" onclick="openFullscreen();">Open Fullscreen</button>
-    	<div class="container" id="video-stream">
-    		<img src= "http://raspberrypi.local:8090/?action=stream" id='stream'>
-    	</div>
-      <div id="left"></div>
-      <div id="right"></div>
-      <script>
-        document.getElementById('stream').src = 'http://' + window.location.hostname + ':8090/?action=stream';
-	var elem = document.documentElement;
-	function openFullscreen() {
-  		if (elem.requestFullscreen) {
-  			elem.requestFullscreen();
-  		} else if (elem.mozRequestFullScreen) { /* Firefox */
-  			elem.mozRequestFullScreen();
-  		} else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
-  			elem.webkitRequestFullscreen();
-  		} else if (elem.msRequestFullscreen) { /* IE/Edge */
-  			elem.msRequestFullscreen();
-  		}
-	}
+        <div class="port">
+            <div class="interface">
+                <div class="info1"></div>
+                <div class="info2">
+                    <div class="xy">
+                        <a id="axisToggle">x/y</a>
+                    </div>
+                    <div class="propelButton">
+                        <a onclick="openPropelSlider()">⚙</a>
+                    </div>
+                </div>
+                <div class="info3">
+                    <div class="toggleFullScreen" onclick="toggleFullScreen();">±</div>
+                </div>
+                <div class="info4"></div>
+                <div class="main">
+                    <div class="menu"></div>
+                    <div class="propelContainer" id="pContainer">
+                        <div class="pLabel">
+                            <a>Propel </a>
+                        </div>
+                        <div class="pRange">
+                            <input class="pSlider" type="range" min="1" max="100" value="50" id="proSlide">
+                            <a class="pValue">
+                                <span id="pVal"></span>
+                                %
+                            
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="tracks"></div>
+                <div class="pad1">
+                    <div class="cAxis" id="camAxis">
+                        <p id="cam"></p>
+                    </div>
+                </div>
+                <div class="pad2">
+                    <div class="pAxis" id="propelAxis">
+                        <p id="propel"></p>
+                    </div>
+                </div>
+                <div class="pad3"></div>
+                <div class="lStickContainer" style="border: 0px">
+                    <div class="lStick" id="leftStick" style="border: 0px">
+                        <div class="lBack" id="leftStickBack"></div>
+                        <div class="lFront" id="leftStickFront" style="left: 0px; top: 0px;"></div>
+                    </div>
+                </div>
+                <div class="statusLower">
+                        <div class="incomingMessages">
+                                    <p id="incomingMessage"></p>
+                        </div>
+                </div>
+                <div class="rStickContainer" style="border: 0px">
+                    <div class="rStick" id="rightStick" style="border: 0px">
+                         <div class="rBack" id="rightStickBack"></div>
+                         <div class="rFront" id="rightStickFront" style="left: 0px; top: 0px;"></div>
+                    </div>
+                 </div>
+                 <div class="pad4"></div>
+                 <div class="footer1"></div>
+                 <div class="footer2"></div>
+                </div>
+            </div>
+            <script>
+                var devMode = 1;
+                var ws;
+                var rover = {
+                    propel: {
+                        x: 0,
+                        y: 0,
+                    },
+                    cam: {
+                        x: 0,
+                        y: 0,
+                    }
+                };
+                var lastCommand = {
+                    propel: {
+                        x: 0,
+                        y: 0,
+                    },
+                    cam: {
+                        x: 0,
+                        y: 0,
+                    }
+                };
+                var newCamData = false;
+                var newPropelData = false;
+                var scaleValue = .5;
+                var camValues = document.getElementById("cam");
+                camValues.innerHTML = "Cam: <br> x: 0 y: 0";
+                var propelValues = document.getElementById("propel");
+                propelValues.innerHTML = 'Propel: <br> x: 0 y: 0';
+                var leftJoystickStartPositionX;
+                var leftJoystickStartPositionY;
+                var leftJoystick = document.getElementById('leftStickFront');
+                leftJoystick.addEventListener('touchstart', function(event) {
+                    event.preventDefault();
+                    if (event.targetTouches.length == 1) {
+                        leftJoystickStartPositionX = event.targetTouches[0].pageX;
+                        leftJoystickStartPositionY = event.targetTouches[0].pageY;
+                    }
 
-        let stickCenter = {
-          	x: 0,
-          	y: 0,
+                }, false);
+                leftJoystick.addEventListener('touchmove', function(event) {
+                    event.preventDefault();
+                    if (event.targetTouches.length == 1) {
+                        var touch = event.targetTouches[0];
+                        var pageX = event.targetTouches[0].pageX;
+                        var pageY = event.targetTouches[0].pageY;
+                        var deltaX = pageX - leftJoystickStartPositionX;
+                        var deltaY = pageY - leftJoystickStartPositionY;
+                        if (deltaX > 50) {
+                            deltaX = 50;
+                        }
+                        if (deltaX < -50) {
+                            deltaX = -50;
+                        }
+                        if (deltaY > 50) {
+                            deltaY = 50;
+                        }
+                        if (deltaY < -50) {
+                            deltaY = -50;
+                        }
+                        rover.cam.x = ~~(deltaX * scaleValue);
+                        rover.cam.y = ~~(deltaY * scaleValue * -1);
+                        //newCamData = true;
+                        camValues.innerHTML = "Cam: <br>" + "x: " + rover.cam.x + " y: " + rover.cam.y;
+                        leftJoystick.style.left = deltaX + 'px';
+                        leftJoystick.style.top = deltaY + 'px';
+                    }
+                }, false);
+                leftJoystick.addEventListener('touchend', function(event) {
+                    event.preventDefault();
+                    leftJoystick.style.left = 0 + "px";
+                    leftJoystick.style.top = 0 + "px";
+                    camValues.innerHTML = "Cam: <br> x: 0 y: 0";
+                }, false);
+                var rightJoystickStartPositionX;
+                var rightJoystickStartPositionY;
+                var rightJoystick = document.getElementById('rightStickFront');
+                rightJoystick.addEventListener('touchstart', function(event) {
+                    event.preventDefault();
+                    if (event.targetTouches.length == 1) {
+                        rightJoystickStartPositionX = event.targetTouches[0].pageX;
+                        rightJoystickStartPositionY = event.targetTouches[0].pageY;
+                    }
 
-        };
-        let rover = {
-          	x: 0,
-          	y: 0,
-        };
-        let lastCommand = {
-        	x:0,
-        	y:0,
-        };
-        let canTransmit = false;
-        //let cf = false;
-        let ws = new WebSocket('ws://' + window.location.hostname + ':80');
+                }, false);
+                rightJoystick.addEventListener('touchmove', function(event) {
+                    event.preventDefault();
+                    if (event.targetTouches.length == 1) {
+                        var touch = event.targetTouches[0];
+                        var pageX = event.targetTouches[0].pageX;
+                        var pageY = event.targetTouches[0].pageY;
+                        var deltaX = pageX - rightJoystickStartPositionX;
+                        var deltaY = pageY - rightJoystickStartPositionY;
+                        if (deltaX > 50) {
+                            deltaX = 50;
+                        }
+                        if (deltaX < -50) {
+                            deltaX = -50;
+                        }
+                        if (deltaY > 50) {
+                            deltaY = 50;
+                        }
+                        if (deltaY < -50) {
+                            deltaY = -50;
+                        }
+                        rover.propel.x = ~~(deltaX * scaleValue * -1);
+                        rover.propel.y = ~~(deltaY * scaleValue * -1);
+                        newPropelData = true;
+                        propelValues.innerHTML = "Propel: <br>" + "x: " + rover.propel.x + " y: " + rover.propel.y;
+                        rightJoystick.style.left = deltaX + 'px';
+                        rightJoystick.style.top = deltaY + 'px';
+                    }
+                }, false);
+                rightJoystick.addEventListener('touchend', function(event) {
+                    event.preventDefault();
+                    rightJoystick.style.left = 0 + "px";
+                    rightJoystick.style.top = 0 + "px";
+                    propelValues.innerHTML = 'Propel: <br> x: 0 y: 0';
+			rover.propel.x = 0;
+			rover.propel.y = 0;
+                }, false);
+                var slider = document.getElementById("proSlide");
+                var output = document.getElementById("pVal");
+                output.innerHTML = slider.value;
 
-        ws.onopen = function () {
-        	ws.send('connection');
+                slider.oninput = function() {
+                    output.innerHTML = this.value;
+                    scaleValue = this.value * .01;
+                }
+                function openPropelSlider() {
+                    var x = document.getElementById("pContainer");
+                    if (x.style.display === "block") {
+                        x.style.display = "none";
+                    } else {
+                        x.style.display = "block";
+                    }
+                }
+                var toggle = document.getElementById("axisToggle");
+                toggle.onpointerdown = function(event) {
+                    toggleAxisDisplay()
+                }
+                function toggleAxisDisplay() {
+                    var c = document.getElementById("camAxis");
+                    var p = document.getElementById("propelAxis");
+                    if (c.style.display === "block") {
+                        c.style.display = "none";
+                    } else {
+                        c.style.display = "block";
+                    }
+                    if (p.style.display === "block") {
+                        p.style.display = "none";
+                    } else {
+                        p.style.display = "block";
+                    }
+                }
+                function toggleFullScreen() {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        }
+                    }
+                }
+                var ws = new WebSocket('ws://' + window.location.hostname + ':80');
+                ws.onmessage = function (message) {
+                        document.getElementById('incomingMessage').innerHTML = (JSON.parse(message));        
+                }
+                setInterval(function() {
+        	               if(newCamData === true || newPropelData === true && (lastCommand.cam.x != rover.cam.x || lastCommand.cam.y != rover.cam.y || lastCommand.propel.x != rover.propel.x || lastCommand.propel.y != rover.propel.y)) {
+        		              ws.send(JSON.stringify(rover));
 
-          	let joystick1 = nipplejs.create({
-              		zone: document.getElementById('right'),
-              		mode: 'static',
-              		position: { right: '50%', bottom: '50%' },
-              		color: '#B0C4DE',
-              		size: 100,
-              		restOpacity: 1,
-        	});
-        	joystick1.on('start', function (evt, nipple) {
-              		stickCenter.x = nipple.position.x;
-              		stickCenter.y = nipple.position.y;
-        	}).on('move', function (evt, nipple) {
-        		canTransmit = true;
-            		rover.x = ~~((nipple.position.x - stickCenter.x) * -1.26 + 63);
-            		rover.y = ~~((nipple.position.y - stickCenter.y) * -1.26 + 63);
-        	}).on('end', function (evt, nipple) {
-            	stop();
-        	});
-
-        	function stop() {
-        		rover.x = 64;
-        		rover.y = 64;
-        		ws.send(JSON.stringify(rover));
-        		canTransmit = false;
-        	}
-        };
-        ws.onmessage = function (message) {
-        	console.log(message);
-        };
-        setInterval(function() {
-        	if(canTransmit === true && (lastCommand.x != rover.x || lastCommand.y != rover.y)) {
-        		ws.send(JSON.stringify(rover));
-        		lastCommand.x = rover.x;
-        		lastCommand.y = rover.y;
-        	}
-        },100);
-      </script>
+                              	      lastCommand.cam.x = rover.cam.x;
+        		              lastCommand.cam.y = rover.cam.y;
+        		              lastCommand.propel.x = rover.propel.x;
+        		              lastCommand.propel.y = rover.propel.y;
+                           }
+                },100);
+                </script>
     </body>
 </html>

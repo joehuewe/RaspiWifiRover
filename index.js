@@ -1,20 +1,26 @@
-const { execFile } = require('child_process');
-const http = require('http');
-const os = require('os');
-const fs = require('fs');
-const port = 80;
-const websocket = require('ws');
-const url = require('url');
+var { execFile } = require('child_process');
+var http = require('http');
+var os = require('os');
+var fs = require('fs');
+var port = 80;
+var websocket = require('ws');
+var url = require('url');
 //const Gpio = require('pigpio').Gpio;
-const SerialPort = require('serialport');
+var SerialPort = require('serialport');
 
 //const levelShiftEnable = new Gpio(4, {mode: Gpio.OUTPUT});
 //levelShiftEnable.digitalWrite(0);
 var rover = {
-	y: 64,
-	x: 64,
+	propel: {
+		y: 64,
+		x: 64,
+	},
+	cam: {
+		x: 0,
+		y: 0,
+	}
 };
-const serial = new SerialPort('/dev/serial0', {
+var serial = new SerialPort('/dev/serial0', {
 	baudRate: 9600,
 });
 
@@ -37,15 +43,15 @@ class saberToothPacketSerial {
 	}
 }
 
-const child = execFile('/usr/local/bin/mjpg_streamer', ['-i', 'input_uvc.so', '-o', 'output_http.so -p 8090 -w ./home/pi/raspiRover/webcam/'], (error, stdout, stderr) => {
+/*const child = execFile('/usr/local/bin/mjpg_streamer', ['-i', 'input_uvc.so', '-o', 'output_http.so -p 8090 -w /home/pi/RaspiWifiRover/Public/'], (error, stdout, stderr) => {
 	if (error) {
 		console.log(error);
 		return;
 	}
 	console.log(stdout);
-});
+});*/
 
-const server = http.createServer((req, res) => {
+var server = http.createServer((req, res) => {
 	var q = url.parse(req.url, true);
 	var filename;
 	if (q.pathname === '/') {
@@ -62,11 +68,11 @@ const server = http.createServer((req, res) => {
     	res.end();
 	});
 });
-
-const wss = new websocket.Server({server});
+//var saber;
+var wss = new websocket.Server({server});
 
 wss.on('connection', function open(ws) {
-	let saber = new saberToothPacketSerial(128);
+	var saber = new saberToothPacketSerial(128);
 	saber.setMinVolt(9.2);
 	//console.log('connection established');
 	ws.send('connected');
@@ -76,12 +82,28 @@ wss.on('connection', function open(ws) {
 		} catch(e) {
 			return;
 		}
-		//console.log(rover);
-		saber.update(12, rover.y);
-		saber.update(13, rover.x);
+		console.log(rover);
+		this.send('Acknowledged command: ' + JSON.stringify(rover));
+		saber.update(12, rover.propel.y * 1.26 + 64);
+		saber.update(13, rover.propel.x * 1.26 + 64);
 
 	});
 });
+/*wsServer.on('request', function(request) {
+    const connection = request.accept(null, request.origin);
+    connection.on('message', function(message) {
+      console.log('Received Message:', message.utf8Data);
+      connection.sendUTF('Hi this is WebSocket server!');
+    });
+    connection.on('close', function(reasonCode, description) {
+        console.log('Client has disconnected.');
+    });
+});
+	this.send('Acknowledged command: ' + JSON.stringify(rover));
+	saber.update(12, rover.propel.y);
+	saber.update(13, rover.propel.x);
+});*/
+
 
 server.listen(port);
 //console.log(`http://${os.hostname()}.local`);

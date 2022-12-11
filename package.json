@@ -19,7 +19,7 @@
   "author": "Joe Huewe",
   "license": "GPL-3.0",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-ws": "^4.0.0",
     "serialport": "^8.0.5",
     "ws": "^7.2.0"
